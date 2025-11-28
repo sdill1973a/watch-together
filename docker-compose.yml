@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  watch-together:
+    build: .
+    container_name: watch-together
+    restart: unless-stopped
+    ports:
+      - "3333:3333"
+    environment:
+      - PORT=3333
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"

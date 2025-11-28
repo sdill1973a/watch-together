@@ -1,0 +1,1086 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Watch Together</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg-dark: #0a0a0f;
+            --bg-card: #12121a;
+            --bg-hover: #1a1a25;
+            --accent: #e5a00d;
+            --accent-dim: #b8860b;
+            --text: #e0e0e0;
+            --text-dim: #888;
+            --border: #2a2a35;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        /* Landing/Lobby */
+        .landing {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .landing h1 {
+            font-size: 3rem;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, var(--accent), #f4d03f);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .landing .tagline {
+            color: var(--text-dim);
+            margin-bottom: 3rem;
+            font-size: 1.1rem;
+        }
+
+        .lobby-box {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 2rem;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .lobby-box h2 {
+            margin-bottom: 1.5rem;
+            font-weight: 500;
+        }
+
+        .input-group {
+            margin-bottom: 1rem;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-dim);
+            font-size: 0.9rem;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 12px 16px;
+            background: var(--bg-dark);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text);
+            font-size: 1rem;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .btn {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: #000;
+        }
+
+        .btn-primary:hover {
+            background: var(--accent-dim);
+        }
+
+        .btn-secondary {
+            background: var(--bg-hover);
+            color: var(--text);
+            margin-top: 0.5rem;
+        }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            margin: 1.5rem 0;
+            color: var(--text-dim);
+        }
+
+        .divider::before, .divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border);
+        }
+
+        .divider span {
+            padding: 0 1rem;
+            font-size: 0.85rem;
+        }
+
+        /* Theater Mode */
+        .theater {
+            display: none;
+            height: 100vh;
+        }
+
+        .theater.active {
+            display: grid;
+            grid-template-columns: 1fr 320px;
+            grid-template-rows: auto 1fr auto;
+        }
+
+        .theater-header {
+            grid-column: 1 / -1;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 20px;
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .room-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .room-code {
+            background: var(--bg-dark);
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 1.1rem;
+            letter-spacing: 2px;
+            color: var(--accent);
+        }
+
+        .copy-btn {
+            background: none;
+            border: 1px solid var(--border);
+            color: var(--text-dim);
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+
+        .copy-btn:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .video-area {
+            background: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        #video-player {
+            width: 100%;
+            height: 100%;
+            max-height: calc(100vh - 140px);
+        }
+
+        .no-video {
+            text-align: center;
+            color: var(--text-dim);
+        }
+
+        .no-video h3 {
+            margin-bottom: 1rem;
+        }
+
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            background: var(--bg-card);
+            border-left: 1px solid var(--border);
+        }
+
+        .sidebar-tabs {
+            display: flex;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .sidebar-tab {
+            flex: 1;
+            padding: 12px;
+            background: none;
+            border: none;
+            color: var(--text-dim);
+            cursor: pointer;
+            font-size: 0.9rem;
+            border-bottom: 2px solid transparent;
+        }
+
+        .sidebar-tab.active {
+            color: var(--accent);
+            border-bottom-color: var(--accent);
+        }
+
+        .sidebar-content {
+            flex: 1;
+            overflow-y: auto;
+            display: none;
+        }
+
+        .sidebar-content.active {
+            display: block;
+        }
+
+        /* Chat */
+        .chat-messages {
+            padding: 12px;
+            height: calc(100vh - 250px);
+            overflow-y: auto;
+        }
+
+        .chat-message {
+            margin-bottom: 12px;
+        }
+
+        .chat-message .username {
+            font-weight: 600;
+            color: var(--accent);
+            font-size: 0.85rem;
+        }
+
+        .chat-message .text {
+            margin-top: 2px;
+            word-wrap: break-word;
+        }
+
+        .chat-message.system {
+            color: var(--text-dim);
+            font-style: italic;
+            font-size: 0.85rem;
+        }
+
+        .chat-input-area {
+            padding: 12px;
+            border-top: 1px solid var(--border);
+        }
+
+        .chat-input-area input {
+            width: 100%;
+            padding: 10px 14px;
+            background: var(--bg-dark);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text);
+        }
+
+        /* Users list */
+        .users-list {
+            padding: 12px;
+        }
+
+        .user-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            border-radius: 6px;
+        }
+
+        .user-item:hover {
+            background: var(--bg-hover);
+        }
+
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--accent);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            color: #000;
+        }
+
+        .user-name {
+            flex: 1;
+        }
+
+        .leader-badge {
+            background: var(--accent);
+            color: #000;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        /* Library browser */
+        .library-browser {
+            padding: 12px;
+        }
+
+        .library-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .library-item:hover {
+            background: var(--bg-hover);
+        }
+
+        .library-item img {
+            width: 60px;
+            height: 90px;
+            object-fit: cover;
+            border-radius: 4px;
+            background: var(--bg-dark);
+        }
+
+        .library-item .info h4 {
+            margin-bottom: 4px;
+        }
+
+        .library-item .info p {
+            color: var(--text-dim);
+            font-size: 0.85rem;
+        }
+
+        /* Sync indicator */
+        .sync-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.85rem;
+        }
+
+        .sync-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #4caf50;
+        }
+
+        .sync-dot.syncing {
+            background: var(--accent);
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Video URL input for leader */
+        .video-input-area {
+            padding: 20px;
+            background: var(--bg-card);
+            border-top: 1px solid var(--border);
+            grid-column: 1;
+        }
+
+        .video-input-area.hidden {
+            display: none;
+        }
+
+        .video-input-row {
+            display: flex;
+            gap: 10px;
+        }
+
+        .video-input-row input {
+            flex: 1;
+            padding: 12px 16px;
+            background: var(--bg-dark);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text);
+        }
+
+        .video-input-row button {
+            padding: 12px 24px;
+            background: var(--accent);
+            border: none;
+            border-radius: 8px;
+            color: #000;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        /* Plex integration */
+        .plex-config {
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border);
+        }
+
+        .plex-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-dim);
+            font-size: 0.9rem;
+        }
+
+        .plex-status.connected {
+            color: #4caf50;
+        }
+
+        /* Responsive */
+        @media (max-width: 900px) {
+            .theater.active {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar {
+                position: fixed;
+                right: -320px;
+                top: 0;
+                bottom: 0;
+                width: 320px;
+                transition: right 0.3s;
+                z-index: 100;
+            }
+
+            .sidebar.open {
+                right: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Landing/Lobby -->
+    <div class="landing" id="landing">
+        <h1>Watch Together</h1>
+        <p class="tagline">Sync your Plex library with friends</p>
+
+        <div class="lobby-box">
+            <h2>Start Watching</h2>
+
+            <div class="input-group">
+                <label>Your Name</label>
+                <input type="text" id="username" placeholder="Enter your name" value="">
+            </div>
+
+            <button class="btn btn-primary" onclick="createRoom()">Create Room</button>
+
+            <div class="divider"><span>or join existing</span></div>
+
+            <div class="input-group">
+                <label>Room Code</label>
+                <input type="text" id="roomCode" placeholder="XXXX" maxlength="4" style="text-transform: uppercase; letter-spacing: 4px; text-align: center;">
+            </div>
+
+            <button class="btn btn-secondary" onclick="joinRoom()">Join Room</button>
+
+            <div class="plex-config">
+                <div class="input-group">
+                    <label>Plex Server URL</label>
+                    <input type="text" id="plexUrl" placeholder="http://localhost:32400" value="http://localhost:32400">
+                </div>
+                <div class="input-group">
+                    <label>Plex Token</label>
+                    <input type="password" id="plexToken" placeholder="Your X-Plex-Token">
+                </div>
+                <div class="plex-status" id="plexStatus">
+                    <span class="sync-dot"></span>
+                    <span>Not connected</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Theater Mode -->
+    <div class="theater" id="theater">
+        <header class="theater-header">
+            <div class="room-info">
+                <span style="font-weight: 600;">Watch Together</span>
+                <span class="room-code" id="displayRoomCode">----</span>
+                <button class="copy-btn" onclick="copyRoomCode()">Copy Link</button>
+            </div>
+            <div class="sync-status">
+                <span class="sync-dot" id="syncDot"></span>
+                <span id="syncText">Synced</span>
+                <span style="margin-left: 1rem; color: var(--text-dim);" id="viewerCount">1 viewer</span>
+            </div>
+        </header>
+
+        <div class="video-area">
+            <div class="no-video" id="noVideo">
+                <h3>No video loaded</h3>
+                <p>The host needs to select something to watch</p>
+            </div>
+            <video id="video-player" style="display: none;" controls></video>
+        </div>
+
+        <div class="sidebar">
+            <div class="sidebar-tabs">
+                <button class="sidebar-tab active" onclick="switchTab('chat')">Chat</button>
+                <button class="sidebar-tab" onclick="switchTab('users')">Users</button>
+                <button class="sidebar-tab" onclick="switchTab('library')">Library</button>
+            </div>
+
+            <div class="sidebar-content active" id="tab-chat">
+                <div class="chat-messages" id="chatMessages"></div>
+                <div class="chat-input-area">
+                    <input type="text" id="chatInput" placeholder="Send a message..." onkeypress="handleChatKeypress(event)">
+                </div>
+            </div>
+
+            <div class="sidebar-content" id="tab-users">
+                <div class="users-list" id="usersList"></div>
+            </div>
+
+            <div class="sidebar-content" id="tab-library">
+                <div class="library-browser" id="libraryBrowser">
+                    <p style="color: var(--text-dim); padding: 20px; text-align: center;">
+                        Connect to Plex to browse your library
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="video-input-area" id="videoInputArea">
+            <div class="video-input-row">
+                <input type="text" id="videoUrlInput" placeholder="Paste video URL or select from library...">
+                <button onclick="loadVideo()">Load Video</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // State
+        let ws = null;
+        let isLeader = false;
+        let currentRoom = null;
+        let username = '';
+        let plexUrl = '';
+        let plexToken = '';
+        let users = [];
+        let syncEnabled = true;
+        let lastSyncTime = 0;
+
+        const video = document.getElementById('video-player');
+
+        // WebSocket connection
+        function connect() {
+            const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+            ws = new WebSocket(`${protocol}//${location.host}`);
+
+            ws.onopen = () => console.log('Connected to server');
+
+            ws.onmessage = (event) => {
+                const msg = JSON.parse(event.data);
+                handleMessage(msg);
+            };
+
+            ws.onclose = () => {
+                console.log('Disconnected');
+                setTimeout(connect, 3000);
+            };
+        }
+
+        function handleMessage(msg) {
+            switch (msg.type) {
+                case 'created':
+                    currentRoom = msg.roomCode;
+                    isLeader = true;
+                    enterTheater();
+                    addSystemMessage('Room created. Share the code with friends!');
+                    break;
+
+                case 'joined':
+                    currentRoom = msg.roomCode;
+                    isLeader = false;
+                    users = msg.users || [];
+                    enterTheater();
+                    if (msg.videoUrl) {
+                        setVideoSource(msg.videoUrl);
+                    }
+                    if (msg.state) {
+                        video.currentTime = msg.state.currentTime;
+                        if (msg.state.playing) video.play();
+                    }
+                    addSystemMessage('Joined room. Syncing with host...');
+                    break;
+
+                case 'error':
+                    alert(msg.message);
+                    break;
+
+                case 'sync':
+                    if (!isLeader && syncEnabled) {
+                        handleSync(msg);
+                    }
+                    break;
+
+                case 'videoChanged':
+                    setVideoSource(msg.videoUrl);
+                    addSystemMessage('Video changed by host');
+                    break;
+
+                case 'userJoined':
+                    users.push(msg.username);
+                    addSystemMessage(`${msg.username} joined`);
+                    updateUsersList();
+                    break;
+
+                case 'userLeft':
+                    users = users.filter(u => u !== msg.username);
+                    addSystemMessage(`${msg.username} left`);
+                    updateUsersList();
+                    break;
+
+                case 'newLeader':
+                    if (msg.username === username) {
+                        isLeader = true;
+                        document.getElementById('videoInputArea').classList.remove('hidden');
+                    }
+                    addSystemMessage(`${msg.username} is now the host`);
+                    break;
+
+                case 'chat':
+                    addChatMessage(msg.username, msg.message);
+                    break;
+            }
+        }
+
+        function handleSync(msg) {
+            const drift = Math.abs(video.currentTime - msg.currentTime);
+
+            // Only force sync if drift > 2 seconds
+            if (drift > 2) {
+                video.currentTime = msg.currentTime;
+                document.getElementById('syncDot').classList.add('syncing');
+                document.getElementById('syncText').textContent = 'Syncing...';
+
+                setTimeout(() => {
+                    document.getElementById('syncDot').classList.remove('syncing');
+                    document.getElementById('syncText').textContent = 'Synced';
+                }, 1000);
+            }
+
+            // Match play state
+            if (msg.playing && video.paused) {
+                video.play();
+            } else if (!msg.playing && !video.paused) {
+                video.pause();
+            }
+        }
+
+        function createRoom() {
+            username = document.getElementById('username').value || 'Host';
+            plexUrl = document.getElementById('plexUrl').value;
+            plexToken = document.getElementById('plexToken').value;
+
+            connect();
+            setTimeout(() => {
+                ws.send(JSON.stringify({
+                    type: 'create',
+                    username: username
+                }));
+            }, 500);
+        }
+
+        function joinRoom() {
+            username = document.getElementById('username').value || 'Guest';
+            const roomCode = document.getElementById('roomCode').value.toUpperCase();
+
+            if (!roomCode || roomCode.length !== 4) {
+                alert('Please enter a valid 4-character room code');
+                return;
+            }
+
+            plexUrl = document.getElementById('plexUrl').value;
+            plexToken = document.getElementById('plexToken').value;
+
+            connect();
+            setTimeout(() => {
+                ws.send(JSON.stringify({
+                    type: 'join',
+                    roomCode: roomCode,
+                    username: username
+                }));
+            }, 500);
+        }
+
+        function enterTheater() {
+            document.getElementById('landing').style.display = 'none';
+            document.getElementById('theater').classList.add('active');
+            document.getElementById('displayRoomCode').textContent = currentRoom;
+
+            if (!isLeader) {
+                document.getElementById('videoInputArea').classList.add('hidden');
+            }
+
+            updateUsersList();
+            loadPlexLibrary();
+        }
+
+        function setVideoSource(url) {
+            if (!url) return;
+
+            video.src = url;
+            video.style.display = 'block';
+            document.getElementById('noVideo').style.display = 'none';
+        }
+
+        function loadVideo() {
+            const url = document.getElementById('videoUrlInput').value;
+            if (!url) return;
+
+            setVideoSource(url);
+
+            ws.send(JSON.stringify({
+                type: 'setVideo',
+                videoUrl: url
+            }));
+        }
+
+        // Leader broadcasts sync every 2 seconds
+        setInterval(() => {
+            if (isLeader && ws && ws.readyState === WebSocket.OPEN && video.src) {
+                ws.send(JSON.stringify({
+                    type: 'sync',
+                    playing: !video.paused,
+                    currentTime: video.currentTime
+                }));
+            }
+        }, 2000);
+
+        // Leader broadcasts on play/pause/seek
+        video.addEventListener('play', () => {
+            if (isLeader) broadcastState();
+        });
+
+        video.addEventListener('pause', () => {
+            if (isLeader) broadcastState();
+        });
+
+        video.addEventListener('seeked', () => {
+            if (isLeader) broadcastState();
+        });
+
+        function broadcastState() {
+            if (!ws || ws.readyState !== WebSocket.OPEN) return;
+            ws.send(JSON.stringify({
+                type: 'sync',
+                playing: !video.paused,
+                currentTime: video.currentTime
+            }));
+        }
+
+        // Chat
+        function addChatMessage(user, text) {
+            const container = document.getElementById('chatMessages');
+            const div = document.createElement('div');
+            div.className = 'chat-message';
+            div.innerHTML = `<span class="username">${escapeHtml(user)}</span><div class="text">${escapeHtml(text)}</div>`;
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function addSystemMessage(text) {
+            const container = document.getElementById('chatMessages');
+            const div = document.createElement('div');
+            div.className = 'chat-message system';
+            div.textContent = text;
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function handleChatKeypress(e) {
+            if (e.key === 'Enter') {
+                const input = document.getElementById('chatInput');
+                const message = input.value.trim();
+                if (message) {
+                    ws.send(JSON.stringify({
+                        type: 'chat',
+                        message: message
+                    }));
+                    input.value = '';
+                }
+            }
+        }
+
+        // Users list
+        function updateUsersList() {
+            const container = document.getElementById('usersList');
+            const allUsers = [username, ...users.filter(u => u !== username)];
+
+            container.innerHTML = allUsers.map((u, i) => `
+                <div class="user-item">
+                    <div class="user-avatar">${u.charAt(0).toUpperCase()}</div>
+                    <span class="user-name">${escapeHtml(u)}</span>
+                    ${i === 0 && isLeader ? '<span class="leader-badge">HOST</span>' : ''}
+                </div>
+            `).join('');
+
+            document.getElementById('viewerCount').textContent = `${allUsers.length} viewer${allUsers.length !== 1 ? 's' : ''}`;
+        }
+
+        // Plex library
+        async function loadPlexLibrary() {
+            if (!plexUrl || !plexToken) return;
+
+            try {
+                document.getElementById('plexStatus').className = 'plex-status';
+                document.getElementById('plexStatus').innerHTML = '<span class="sync-dot syncing"></span><span>Connecting...</span>';
+
+                const response = await fetch(`${plexUrl}/library/sections?X-Plex-Token=${plexToken}`);
+                const text = await response.text();
+                const parser = new DOMParser();
+                const xml = parser.parseFromString(text, 'text/xml');
+
+                document.getElementById('plexStatus').className = 'plex-status connected';
+                document.getElementById('plexStatus').innerHTML = '<span class="sync-dot" style="background:#4caf50"></span><span>Connected to Plex</span>';
+
+                const sections = xml.querySelectorAll('Directory');
+                const container = document.getElementById('libraryBrowser');
+
+                container.innerHTML = '';
+                sections.forEach(section => {
+                    const title = section.getAttribute('title');
+                    const key = section.getAttribute('key');
+                    const type = section.getAttribute('type');
+
+                    const div = document.createElement('div');
+                    div.className = 'library-item';
+                    div.innerHTML = `
+                        <div style="width:60px;height:60px;background:var(--bg-hover);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:24px;">
+                            ${type === 'movie' ? '🎬' : type === 'show' ? '📺' : '🎵'}
+                        </div>
+                        <div class="info">
+                            <h4>${escapeHtml(title)}</h4>
+                            <p>${type}</p>
+                        </div>
+                    `;
+                    div.onclick = () => browseSection(key, title);
+                    container.appendChild(div);
+                });
+
+            } catch (e) {
+                console.error('Plex connection failed:', e);
+                document.getElementById('plexStatus').innerHTML = '<span class="sync-dot" style="background:#f44336"></span><span>Connection failed</span>';
+            }
+        }
+
+        async function browseSection(key, title) {
+            const container = document.getElementById('libraryBrowser');
+            container.innerHTML = '<p style="padding:20px;text-align:center;color:var(--text-dim)">Loading...</p>';
+
+            try {
+                const response = await fetch(`${plexUrl}/library/sections/${key}/all?X-Plex-Token=${plexToken}`);
+                const text = await response.text();
+                const parser = new DOMParser();
+                const xml = parser.parseFromString(text, 'text/xml');
+
+                const items = xml.querySelectorAll('Video, Directory');
+                container.innerHTML = `<div style="padding:12px;border-bottom:1px solid var(--border);">
+                    <button onclick="loadPlexLibrary()" style="background:none;border:none;color:var(--accent);cursor:pointer;">← Back</button>
+                    <span style="margin-left:8px;font-weight:600;">${escapeHtml(title)}</span>
+                </div>`;
+
+                items.forEach(item => {
+                    const itemTitle = item.getAttribute('title');
+                    const thumb = item.getAttribute('thumb');
+                    const year = item.getAttribute('year');
+                    const ratingKey = item.getAttribute('ratingKey');
+                    const type = item.tagName.toLowerCase();
+
+                    const div = document.createElement('div');
+                    div.className = 'library-item';
+                    div.innerHTML = `
+                        <img src="${thumb ? plexUrl + thumb + '?X-Plex-Token=' + plexToken : ''}" alt="">
+                        <div class="info">
+                            <h4>${escapeHtml(itemTitle)}</h4>
+                            <p>${year || ''}</p>
+                        </div>
+                    `;
+
+                    if (type === 'video') {
+                        div.onclick = () => playPlexItem(ratingKey);
+                    } else {
+                        div.onclick = () => browseShow(ratingKey, itemTitle);
+                    }
+
+                    container.appendChild(div);
+                });
+
+            } catch (e) {
+                console.error('Failed to browse:', e);
+                container.innerHTML = '<p style="padding:20px;text-align:center;color:#f44336">Failed to load</p>';
+            }
+        }
+
+        async function browseShow(ratingKey, title) {
+            const container = document.getElementById('libraryBrowser');
+            container.innerHTML = '<p style="padding:20px;text-align:center;color:var(--text-dim)">Loading...</p>';
+
+            try {
+                const response = await fetch(`${plexUrl}/library/metadata/${ratingKey}/children?X-Plex-Token=${plexToken}`);
+                const text = await response.text();
+                const parser = new DOMParser();
+                const xml = parser.parseFromString(text, 'text/xml');
+
+                const seasons = xml.querySelectorAll('Directory');
+                container.innerHTML = `<div style="padding:12px;border-bottom:1px solid var(--border);">
+                    <button onclick="loadPlexLibrary()" style="background:none;border:none;color:var(--accent);cursor:pointer;">← Back</button>
+                    <span style="margin-left:8px;font-weight:600;">${escapeHtml(title)}</span>
+                </div>`;
+
+                seasons.forEach(season => {
+                    const seasonTitle = season.getAttribute('title');
+                    const thumb = season.getAttribute('thumb');
+                    const seasonKey = season.getAttribute('ratingKey');
+
+                    const div = document.createElement('div');
+                    div.className = 'library-item';
+                    div.innerHTML = `
+                        <img src="${thumb ? plexUrl + thumb + '?X-Plex-Token=' + plexToken : ''}" alt="">
+                        <div class="info">
+                            <h4>${escapeHtml(seasonTitle)}</h4>
+                        </div>
+                    `;
+                    div.onclick = () => browseEpisodes(seasonKey, seasonTitle, title);
+                    container.appendChild(div);
+                });
+
+            } catch (e) {
+                console.error('Failed to browse show:', e);
+            }
+        }
+
+        async function browseEpisodes(seasonKey, seasonTitle, showTitle) {
+            const container = document.getElementById('libraryBrowser');
+            container.innerHTML = '<p style="padding:20px;text-align:center;color:var(--text-dim)">Loading...</p>';
+
+            try {
+                const response = await fetch(`${plexUrl}/library/metadata/${seasonKey}/children?X-Plex-Token=${plexToken}`);
+                const text = await response.text();
+                const parser = new DOMParser();
+                const xml = parser.parseFromString(text, 'text/xml');
+
+                const episodes = xml.querySelectorAll('Video');
+                container.innerHTML = `<div style="padding:12px;border-bottom:1px solid var(--border);">
+                    <button onclick="loadPlexLibrary()" style="background:none;border:none;color:var(--accent);cursor:pointer;">← Back</button>
+                    <span style="margin-left:8px;font-weight:600;">${escapeHtml(showTitle)} - ${escapeHtml(seasonTitle)}</span>
+                </div>`;
+
+                episodes.forEach(ep => {
+                    const epTitle = ep.getAttribute('title');
+                    const epIndex = ep.getAttribute('index');
+                    const thumb = ep.getAttribute('thumb');
+                    const ratingKey = ep.getAttribute('ratingKey');
+
+                    const div = document.createElement('div');
+                    div.className = 'library-item';
+                    div.innerHTML = `
+                        <img src="${thumb ? plexUrl + thumb + '?X-Plex-Token=' + plexToken : ''}" alt="">
+                        <div class="info">
+                            <h4>E${epIndex}: ${escapeHtml(epTitle)}</h4>
+                        </div>
+                    `;
+                    div.onclick = () => playPlexItem(ratingKey);
+                    container.appendChild(div);
+                });
+
+            } catch (e) {
+                console.error('Failed to browse episodes:', e);
+            }
+        }
+
+        async function playPlexItem(ratingKey) {
+            try {
+                const response = await fetch(`${plexUrl}/library/metadata/${ratingKey}?X-Plex-Token=${plexToken}`);
+                const text = await response.text();
+                const parser = new DOMParser();
+                const xml = parser.parseFromString(text, 'text/xml');
+
+                const media = xml.querySelector('Media Part');
+                if (media) {
+                    const key = media.getAttribute('key');
+                    const videoUrl = `${plexUrl}${key}?X-Plex-Token=${plexToken}`;
+
+                    document.getElementById('videoUrlInput').value = videoUrl;
+                    if (isLeader) {
+                        loadVideo();
+                    }
+
+                    // Switch to chat tab
+                    switchTab('chat');
+                }
+            } catch (e) {
+                console.error('Failed to play item:', e);
+            }
+        }
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.sidebar-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.sidebar-content').forEach(c => c.classList.remove('active'));
+
+            document.querySelector(`.sidebar-tab[onclick="switchTab('${tabName}')"]`).classList.add('active');
+            document.getElementById(`tab-${tabName}`).classList.add('active');
+        }
+
+        function copyRoomCode() {
+            const url = `${location.origin}?room=${currentRoom}`;
+            navigator.clipboard.writeText(url);
+
+            const btn = document.querySelector('.copy-btn');
+            btn.textContent = 'Copied!';
+            setTimeout(() => btn.textContent = 'Copy Link', 2000);
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Check for room code in URL
+        window.onload = () => {
+            const params = new URLSearchParams(location.search);
+            const room = params.get('room');
+            if (room) {
+                document.getElementById('roomCode').value = room;
+            }
+
+            // Load saved Plex config
+            const savedPlexUrl = localStorage.getItem('plexUrl');
+            const savedPlexToken = localStorage.getItem('plexToken');
+            if (savedPlexUrl) document.getElementById('plexUrl').value = savedPlexUrl;
+            if (savedPlexToken) document.getElementById('plexToken').value = savedPlexToken;
+        };
+
+        // Save Plex config on change
+        document.getElementById('plexUrl').addEventListener('change', (e) => {
+            localStorage.setItem('plexUrl', e.target.value);
+        });
+        document.getElementById('plexToken').addEventListener('change', (e) => {
+            localStorage.setItem('plexToken', e.target.value);
+        });
+    </script>
+</body>
+</html>
